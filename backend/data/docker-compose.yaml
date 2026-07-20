@@ -1,0 +1,17 @@
+# /data/docker-compose.yaml
+version: '3.8'
+services:
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib
+    ports:
+      - "4317:4317" # gRPC
+      - "4318:4318" # HTTP (นี่คือตัวที่คุณต้องชี้มา)
+      - "8889:8889" # เปิดพอร์ตนี้เพื่อให้ Prometheus มาดึง Metrics
+    volumes:
+      - ./otel-config.yaml:/etc/otelcol-contrib/config.yaml
+
+  loki:
+    image: grafana/loki:latest
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
