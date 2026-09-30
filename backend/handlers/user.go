@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"github.com/gofiber/fiber/v2"
 	"github.com/PainQlers/backend/models" // Import package models ของเราเข้ามา
+	"github.com/gofiber/fiber/v2"
 )
 
 // GetUserByID ทำหน้าที่ดึงข้อมูล User ตาม ID ที่ส่งมา

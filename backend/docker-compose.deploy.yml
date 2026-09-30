@@ -1,0 +1,17 @@
+services:
+  ai-agent-service:
+    image: sdkgolang:latest
+    container_name: ai-agent-service
+    restart: unless-stopped
+    environment:
+      TELEMETRY_ENDPOINT: alloy:4318
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:?Set ANTHROPIC_API_KEY in .env before starting the service}
+    ports:
+      - "8080:8080"
+    networks:
+      observability:
+
+networks:
+  observability:
+    external: true
+    name: sme-observability_default

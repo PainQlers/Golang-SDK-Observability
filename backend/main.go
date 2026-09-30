@@ -46,8 +46,8 @@ func main() {
 	ctx := context.Background()
 
 	// 1. โหลด Environment Variables จากไฟล์ .env ก่อนเริ่มระบบ
-	if err := godotenv.Load(); err != nil {
-		slog.Warn("Warning: ไม่พบไฟล์ .env หรือไม่สามารถโหลดได้")
+	if err := godotenv.Load(); err == nil {
+		slog.Info("Loaded .env file")
 	}
 
 	// ดึง IP พิกัดเซิร์ฟเวอร์กลางมาจาก .env
@@ -62,6 +62,7 @@ func main() {
 		AlloyEndpoint: telemetryEndpoint,
 		ServiceName:   "ai-agent-service",
 		MetricsPort:   "2112",
+		Insecure:      true,
 		EnableTrace:   true,
 		EnableMetrics: true,
 		EnableLogs:    true,

@@ -1,0 +1,71 @@
+// Host and application metrics
+prometheus.exporter.unix "node" {}
+
+prometheus.scrape "node" {
+  targets         = prometheus.exporter.unix.node.targets
+  forward_to      = [prometheus.remote_write.default.receiver]
+  scrape_interval = "15s"
+}
+
+prometheus.remote_write "default" {
+  endpoint {
+    url = "http://prometheus:9090/api/v1/write"
+  }
+
+  external_labels = {
+    project = env("PROJECT_NAME"),
+  }
+}
+
+// Host logs
+loki.source.journal "system" {
+  forward_to = [loki.write.default.receiver]
+
+  labels = {
+    project = env("PROJECT_NAME"),
+    job     = "systemd-journal",
+  }
+}
+
+loki.write "default" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}
+
+// Application telemetry over OTLP. The HTTP listener is reachable only from
+// containers on the sme-observability_default Docker network.
+otelcol.receiver.otlp "applications" {
+  http {}
+
+  output {
+    metrics = [otelcol.exporter.prometheus.applications.input]
+    logs    = [otelcol.processor.batch.applications.input]
+    traces  = [otelcol.processor.batch.applications.input]
+  }
+}
+
+otelcol.processor.batch "applications" {
+  output {
+    logs   = [otelcol.exporter.loki.applications.input]
+    traces = [otelcol.exporter.otlp.tempo.input]
+  }
+}
+
+otelcol.exporter.prometheus "applications" {
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
+otelcol.exporter.loki "applications" {
+  forward_to = [loki.write.default.receiver]
+}
+
+otelcol.exporter.otlp "tempo" {
+  client {
+    endpoint = "tempo:4317"
+
+    tls {
+      insecure = true
+    }
+  }
+}

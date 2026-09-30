@@ -2,38 +2,39 @@ package telemetry
 
 import (
 	"context"
+	"errors"
 
-	sdktrace "go.opentelemetry.io/otel/sdk/trace"
-	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	sdklog "go.opentelemetry.io/otel/sdk/log"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
 // ShutdownTelemetry shuts down telemetry providers.
-func ShutdownTelemetry(ctx context.Context, tp *sdktrace.TracerProvider, mp *sdkmetric.MeterProvider, lp *sdklog.LoggerProvider) error {
+func ShutdownTelemetry(
+	ctx context.Context,
+	tp *sdktrace.TracerProvider,
+	mp *sdkmetric.MeterProvider,
+	lp *sdklog.LoggerProvider,
+) error {
 	var err error
 
 	if tp != nil {
-		if errShutdown := tp.Shutdown(ctx); errShutdown != nil {
-			err = errShutdown
+		if shutdownErr := tp.Shutdown(ctx); shutdownErr != nil {
+			err = errors.Join(err, shutdownErr)
 		}
 	}
+
 	if mp != nil {
-		if errShutdown := mp.Shutdown(ctx); errShutdown != nil {
-			if err != nil {
-				err = err
-			} else {
-				err = errShutdown
-			}
+		if shutdownErr := mp.Shutdown(ctx); shutdownErr != nil {
+			err = errors.Join(err, shutdownErr)
 		}
 	}
+
 	if lp != nil {
-		if errShutdown := lp.Shutdown(ctx); errShutdown != nil {
-			if err != nil {
-				err = err
-			} else {
-				err = errShutdown
-			}
+		if shutdownErr := lp.Shutdown(ctx); shutdownErr != nil {
+			err = errors.Join(err, shutdownErr)
 		}
 	}
+
 	return err
 }

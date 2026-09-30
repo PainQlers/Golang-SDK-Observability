@@ -22,9 +22,10 @@ func InitSharedTelemetry(ctx context.Context, cfg Config, serviceName string) (f
 	}
 
 	var (
-		tp *sdktrace.TracerProvider
-		mp *metric.MeterProvider  // ใช้ type ที่ NewMetricProvider คืนมา
-		lp *sdklog.LoggerProvider // ใช้ type ที่ NewLoggerProvider คืนมา
+		tp            *sdktrace.TracerProvider
+		mp            *metric.MeterProvider  // ใช้ type ที่ NewMetricProvider คืนมา
+		lp            *sdklog.LoggerProvider // ใช้ type ที่ NewLoggerProvider คืนมา
+		cancelMetrics func()
 	)
 
 	// 2. Set up trace provider
@@ -58,7 +59,9 @@ func InitSharedTelemetry(ctx context.Context, cfg Config, serviceName string) (f
 		}
 
 		otel.SetMeterProvider(mp)
-		StartMetricsServer(ctx)
+		metricsCtx, metricsCancel := context.WithCancel(context.Background())
+		cancelMetrics = metricsCancel
+		StartMetricsServer(metricsCtx, cfg.MetricsPort)
 	}
 
 	// 4. Set up logger provider
@@ -96,6 +99,9 @@ func InitSharedTelemetry(ctx context.Context, cfg Config, serviceName string) (f
 		}
 
 		if mp != nil {
+			if cancelMetrics != nil {
+				cancelMetrics()
+			}
 			_ = mp.Shutdown(ctx)
 		}
 

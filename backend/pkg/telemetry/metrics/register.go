@@ -18,8 +18,12 @@ func Register() {
 
 			HTTPRequestsTotal,
 			HTTPRequestDuration,
+			HTTPClientRequestsTotal,
+			HTTPClientRequestDuration,
 
 			DatabaseQueriesTotal,
+			DatabaseQueryDuration,
+			DatabaseQueryFailuresTotal,
 		)
 	})
 }
